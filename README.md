@@ -19,7 +19,7 @@ Usage
       -h, --help     show this help message and exit
       -v, --version  show program's version number and exit
 
-    /usr/local/bin/fionly v1.0.0 by Brian Wallace (@botnet_hunter)
+    /usr/local/bin/fionly v1.1.0 by Brian Wallace (@botnet_hunter)
 
 If you wanted to see all the IPs from your Apache log as they come in:
 
