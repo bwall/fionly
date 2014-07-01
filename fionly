@@ -1,39 +1,21 @@
 #!/usr/bin/env python2
-from sys import stdin
-from hashlib import sha256
-from tempfile import SpooledTemporaryFile
-import random
-
-max_buffer_size = 1024 * 1024 * 64
-salt = ''.join(chr(random.randint(0, 255)) for _ in range(32))
+import sys
 
 
-def is_first(data, temp_file):
-    global salt
-    m = sha256()
-    m.update(data.rstrip())
-    m.update(salt)
-    hash = m.hexdigest()
-
-    temp_file.seek(0)
-    for line in temp_file:
-        if line.rstrip() == hash:
-            return False
-
-    temp_file.seek(0, 2)
-    temp_file.write(hash + "\r\n")
-    return True
-
-
-def get_firsts_for_file_handle(fh, temp_file):
+def get_firsts_for_file_handle(fh):
+    database_set = set()
+    rstrip = str.rstrip
+    dadd = database_set.add
     for l in fh:
-        l = l.rstrip()
-        if is_first(l, temp_file):
+        l = rstrip(l)
+        data = hash(l)
+        if data not in database_set:
             yield l
+            dadd(data)
 
 
 def get_version():
-    return "1.0.0"
+    return "1.1.0"
 
 
 if __name__ == "__main__":
@@ -50,12 +32,20 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with SpooledTemporaryFile(max_size=max_buffer_size) as temp:
-        if args.path == "-":
-            with stdin as fh:
-                for line in get_firsts_for_file_handle(fh, temp):
-                    print line
-        else:
-            with open(args.path, 'r') as fh:
-                for line in get_firsts_for_file_handle(fh, temp):
-                    print line
+    try:
+        with sys.stdin if args.path == "-" else open(args.path, 'r') as fh:
+            for line in get_firsts_for_file_handle(fh):
+                print line
+    except KeyboardInterrupt:
+        pass
+    except Exception as ex:
+        print ex
+    finally:
+        try:
+            sys.stdout.close()
+        except:
+            pass
+        try:
+            sys.stderr.close()
+        except:
+            pass
